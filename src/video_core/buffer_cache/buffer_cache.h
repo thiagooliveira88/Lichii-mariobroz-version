@@ -110,6 +110,7 @@ void BufferCache<P>::TickFrame() {
         return;
     }
     runtime.TickFrame(slot_buffers);
+    native_indirect_uniforms_this_frame.clear();
     if (frame_tick % 600 == 0 && !uploaded_buffer_ranges.empty()) {
         for (const auto& [address, size] : uploaded_buffer_ranges) {
             device_memory.HintCold(address, size);
@@ -1177,6 +1178,33 @@ void BufferCache<P>::BindHostGraphicsUniformBuffer(size_t stage, u32 index, u32 
             return alignment > 1 && (offset % alignment) != 0;
         }
     }();
+    // Native programs keep tables next to their code in uniform banks read with indirect offsets
+    // (Splatoon Raiders: the dialogue box corners in c1). Writes to that memory can go unnoticed by
+    // the memory tracker, leaving stale host contents, so upload such a bank again on every bind:
+    // once per frame left Ocarina of Time's per-draw material data stale for a frame now and then
+    // (white flashes). EDEN_NX2_BANK_REUPLOAD: 0 off, 1 once per frame, 2 every bind of a 64 KiB
+    // bank (the default), 3 every bind of any native bank (to test banks of other sizes).
+    static const char bank_mode = [] {
+        const char* v = std::getenv("EDEN_NX2_BANK_REUPLOAD");
+        return v != nullptr ? v[0] : '2';
+    }();
+    const bool native_bank = has_host_buffer && size != 0 && gpu_memory != nullptr &&
+                             gpu_memory->UsesNativeTiling() &&
+                             !memory_tracker.IsRegionGpuModified(device_addr, size);
+    if (bank_mode != '0' && native_bank &&
+        (bank_mode == '3' || (*channel_state->uniform_buffer_sizes)[stage][index] == 0x10000) &&
+        (bank_mode == '2' || bank_mode == '3' ||
+         native_indirect_uniforms_this_frame.insert(device_addr).second)) {
+        // The bank size is only an upper limit: stop at the end of the mapped memory.
+        u64 mapped_size = 0;
+        while (mapped_size < size &&
+               device_memory.template GetPointer<u8>(device_addr + mapped_size) != nullptr) {
+            mapped_size += Core::DEVICE_PAGESIZE - ((device_addr + mapped_size) & Core::DEVICE_PAGEMASK);
+        }
+        if (mapped_size != 0) {
+            memory_tracker.MarkRegionAsCpuModified(device_addr, (std::min<u64>)(mapped_size, size));
+        }
+    }
     const bool use_fast_buffer = needs_alignment_stream
         || (has_host_buffer && size <= channel_state->uniform_buffer_skip_cache_size
             && !memory_tracker.IsRegionGpuModified(device_addr, size));

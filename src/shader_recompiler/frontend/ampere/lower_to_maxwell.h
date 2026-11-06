@@ -1768,19 +1768,18 @@ inline LoweredProgram LowerToMaxwellWith(std::span<const Instruction> code, u32 
         }
         case 0x23c: { // HMMA.1688/.16816.F16, software warp expansion (no tensor extension required).
             const u32 a = insn.Bits(24, 8), b = insn.Bits(32, 8), c = insn.Bits(64, 8);
-            const u32 mode = insn.words[2] & ~0xffU;
-            const u32 depth = mode == 0 ? 8U : 16U;
-            const u32 a_count = depth / 4, b_count = depth / 8;
+            const u32 shape = insn.words[2] & ~0xffU;
+            const u32 depth = insn.Bits(73, 2) == 1 ? 8U : 16U;
+            const u32 a_count = depth == 8 ? 2U : 4U, b_count = depth == 8 ? 1U : 2U;
             const u32 limit = uses_uniform_bank ? high_uniform_base : 246U;
-            if (native_predicate != 7 || (mode != 0 && mode != 0x800) ||
-                (insn.words[1] & ~0xffU) || (insn.words[3] & 0xc00001ffU) ||
-                dest % 2 || dest + 2 > limit || a % a_count || a + a_count > limit ||
-                b % b_count || b + b_count > limit || (c != 255 && (c % 2 || c + 2 > limit)))
+            if (shape != 0x0010e000 || insn.Bits(61, 3) || insn.Bits(87, 4) || dest > 254 ||
+                dest + 2 > limit || (a & (a_count - 1)) || a + a_count > limit || (b & (b_count - 1)) ||
+                b + b_count > limit || (c != 255 && ((c & 1) || c + 2 > limit)))
                 return fail(index, "native half matrix multiply mode");
-            if (compact_matrix) {
-                // A software collective, not an NV cooperative-matrix operation. The backend
-                // shares a bounded loop helper instead of duplicating hundreds of instructions
-                // at every HMMA site. Bit 48 tags software; bit 49 selects K=8 rather than K=16.
+            if (compact_matrix && native_predicate == 7) {
+                // TENSOR_MUL_ADD, not a Maxwell instruction: the SPIR-V backend calls one shared
+                // loop per program (same products, f32 sums and half rounding after every eight
+                // products as the expansion below). Bit 48 marks it, bit 49 selects K = 8.
                 emit(0x5d30000000000000ULL | predicate | dest | (u64{a} << 8) |
                      (u64{b} << 20) | (u64{c} << 39) | (u64{1} << 48) |
                      (u64{depth == 8} << 49));

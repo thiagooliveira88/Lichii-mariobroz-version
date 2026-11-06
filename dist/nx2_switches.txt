@@ -21,6 +21,12 @@ EDEN_NX2_TC_MIN_AGE=600
 # Prevent GPU compute synchronization flicker
 EDEN_NX2_RESUME_ADD=0
 
+# Keep ASTC textures uncompressed on 12GB+ GPUs (AMD RX 7700 XT) to avoid BC3 compression noise/sparkle
+EDEN_NX2_KEEP_ASTC=1
+
+# Relax bit-exact EQUAL depth tests to LESS_OR_EQUAL on AMD GPUs to eliminate depth flickering/scintillation
+EDEN_NX2_DEPTH_EQUAL_RELAX=1
+
 # Reject broken ground mist (c72b6ea746c00433) and fog/light-shaft veil (3ddfb1d7a854c849)
 EDEN_NX2_REJECT_HASH=c72b6ea746c00433,3ddfb1d7a854c849
 
@@ -45,4 +51,3 @@ EDEN_NX2_REJECT_HASH=c72b6ea746c00433,3ddfb1d7a854c849
 #EDEN_NX2_INLINE_DEFER=0
 #EDEN_NX2_SPLIT_SKIP=1
 #EDEN_NX2_AUTO_STUB=1
-#EDEN_NX2_KEEP_ASTC=1
