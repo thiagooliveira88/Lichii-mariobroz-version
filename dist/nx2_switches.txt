@@ -14,6 +14,16 @@ EDEN_NX2_SPLIT=2
 # Batch GPU fence syncpoints to reduce host driver overhead and smooth frametimes.
 EDEN_NX2_FENCE_BATCH=1
 
+# --- The Legend of Zelda: Ocarina of Time (0400486024DEC000) Fixes ---
+# Prevent texture cache thrashing in Kokiri Forest
+EDEN_NX2_TC_MIN_AGE=600
+
+# Prevent GPU compute synchronization flicker
+EDEN_NX2_RESUME_ADD=0
+
+# Reject broken ground mist (c72b6ea746c00433) and fog/light-shaft veil (3ddfb1d7a854c849)
+EDEN_NX2_REJECT_HASH=c72b6ea746c00433,3ddfb1d7a854c849
+
 # Leave buffer downloads disabled on Switch 2 (default): forcing downloads (=1) copies back
 # 90-220 MB/s of buffers CPU never touches, causing heavy mutex contention and dropping FPS by ~38-63%.
 #EDEN_NX2_BUFFER_DOWNLOADS=1

@@ -10,14 +10,13 @@ All credit for the emulator itself goes to the Lichii / Eglantine / Eden / yuzu 
 - **Fewer waits between GPU channels**: semaphore acquires resume as soon as a matching release is queued.
 - **Cheaper texture-cache garbage collection**: `EDEN_NX2_TC_MIN_AGE` keeps recently used images (avoids flashes).
 
-## Recommended settings for Ocarina of Time
-Set these environment variables in `nx2_switches.txt` before launching `lichii.exe`:
-- `EDEN_NX2_TC_MIN_AGE=600`
-- `EDEN_NX2_RESUME_ADD=0`
+## Configurações NX2 recomendadas para Ocarina of Time
+O arquivo `nx2_switches.txt` já vem configurado na raiz da build e em `%APPDATA%\eden\nx2_switches.txt` com:
+- `EDEN_NX2_TC_MIN_AGE=600` (evita thrashing de texturas na Floresta Kokiri)
+- `EDEN_NX2_RESUME_ADD=0` (evita oscilação de sincronização GPU compute)
 - `EDEN_NX2_SPLIT=2`
 - `EDEN_NX2_FENCE_BATCH=1`
-
-*(Note: `EDEN_NX2_REJECT_HASH=c72b6ea746c00433` is NO LONGER needed! The ground mist and sky ambient lighting now render correctly).*
+- `EDEN_NX2_REJECT_HASH=c72b6ea746c00433,3ddfb1d7a854c849` (rejeita a névoa densa de chão e os feixes de luz que cobriam o cenário)
 
 ## License
 GPL-3.0-or-later, like Lichii and Eglantine. Full source code included.
