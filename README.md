@@ -26,7 +26,7 @@ This is an independent fork, not an official release of those upstream projects.
 
 ## Downloads and setup
 
-Published builds belong on this fork's [releases page](https://github.com/zortos293/Eglantine/releases). The repository still uses its historical Eglantine name; the desktop application is now Lichii.
+Published builds belong on this fork's [releases page](https://github.com/thiagooliveira88/Lichii-mariobroz-version/releases). The repository still uses its historical Eglantine name; the desktop application is now Lichii.
 
 On Windows, extract the entire build archive and run **lichii.exe**. Only use games and system files you have legally obtained. Games, keys and firmware are not included.
 
