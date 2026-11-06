@@ -454,6 +454,24 @@ bool FoldDerivativeYFromCorrection(IR::Inst& inst) {
     return true;
 }
 
+void FoldIMul32(IR::Inst& inst) {
+    if (inst.HasAssociatedPseudoOperation()) {
+        return;
+    }
+    if (!FoldCommutative<u32>(inst, [](u32 a, u32 b) { return a * b; })) {
+        return;
+    }
+    const IR::Value rhs{inst.Arg(1)};
+    if (rhs.IsImmediate()) {
+        const u32 imm{rhs.U32()};
+        if (imm == 0) {
+            inst.ReplaceUsesWith(IR::Value{u32{0}});
+        } else if (imm == 1) {
+            inst.ReplaceUsesWith(inst.Arg(0));
+        }
+    }
+}
+
 void FoldFPMul32(IR::Inst& inst) {
     if (FoldWhenAllImmediates(inst, [](f32 a, f32 b) { return a * b; })) {
         return;
@@ -462,9 +480,27 @@ void FoldFPMul32(IR::Inst& inst) {
     if (control.no_contraction) {
         return;
     }
-    // Fold interpolation operations
     const IR::Value lhs_value{inst.Arg(0)};
     const IR::Value rhs_value{inst.Arg(1)};
+    const auto check_identity = [](const IR::Value& val) {
+        return val.IsImmediate() && val.F32() == 1.0f;
+    };
+    const auto check_zero = [](const IR::Value& val) {
+        return val.IsImmediate() && val.F32() == 0.0f;
+    };
+    if (check_identity(lhs_value)) {
+        inst.ReplaceUsesWith(rhs_value);
+        return;
+    }
+    if (check_identity(rhs_value)) {
+        inst.ReplaceUsesWith(lhs_value);
+        return;
+    }
+    if (check_zero(lhs_value) || check_zero(rhs_value)) {
+        inst.ReplaceUsesWith(IR::Value{0.0f});
+        return;
+    }
+    // Fold interpolation operations
     if (lhs_value.IsImmediate() || rhs_value.IsImmediate()) {
         return;
     }
@@ -998,8 +1034,7 @@ void ConstantPropagation(Environment& env, IR::Block& block, IR::Inst& inst) {
     case IR::Opcode::SMax32:
         return FoldSMax32(block, inst);
     case IR::Opcode::IMul32:
-        FoldWhenAllImmediates(inst, [](u32 a, u32 b) { return a * b; });
-        return;
+        return FoldIMul32(inst);
     case IR::Opcode::ShiftRightArithmetic32:
         FoldWhenAllImmediates(inst, [](s32 a, s32 b) { return static_cast<u32>(a >> b); });
         return;

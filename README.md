@@ -1,8 +1,8 @@
-# Lichii (sharkiix's version)
+# Lichii (mariobroz's version)
 
-> **VERY EXPERIMENTAL.** Mainly for **AMD** GPUs, optimised for **Zelda: Ocarina of Time** (Switch 2).
+> **VERY EXPERIMENTAL.** Custom build by **mariobroz**, optimised for **Zelda: Ocarina of Time** (Switch 2) on AMD Radeon GPUs.
 > Unofficial fork of [zortos293/Lichii](https://github.com/zortos293/Lichii): all credit for the emulator goes to zortos293 and the Lichii / Eden / yuzu contributors.
-> What changed and the recommended settings: [SHARKIIX.md](SHARKIIX.md). Download: **Releases** page.
+> What changed and the recommended settings: [MARIOBROZ.md](MARIOBROZ.md). Download: **Releases** page.
 
 ---
 
